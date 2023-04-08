@@ -6,10 +6,11 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 
 class AgeCalc:
-    def __init__(self, master=tk.Tk):
+    def __init__(self, master):
         self.master = master
         self.master.title("Age Calculator")
         self.master.resizable(0, 0)
+
         try:
             self.master.iconbitmap("app-icon.ico")
         except tk.TclError:
@@ -22,7 +23,7 @@ class AgeCalc:
         self.lbl_title = tk.Label(self.frame1, font="{@Microsoft JhengHei} 12 {}", text="----------------\nAge Calculator\n----------------")
         self.lbl_title.grid(column=0, columnspan=3, row=0)
 
-        self.lblfrm_collect = tk.LabelFrame(self.frame1, font="{@Microsoft JhengHei} 8 {}", height=50, text=" Set your age (DD/MM/YYYY)", width=220)
+        self.lblfrm_collect = tk.LabelFrame(self.frame1, font="{@Microsoft JhengHei} 8 {}", height=50, text=" Enter your birthday (DD/MM/YYYY)", width=220)
         self.lblfrm_collect.grid(column=0, columnspan=3, pady=4, row=1)
         self.lblfrm_collect.grid_propagate(0)
         self.lblfrm_collect.grid_anchor("center")
@@ -59,32 +60,40 @@ class AgeCalc:
         self.mainwindow = self.frame1
 
     def calc(self):
-        try:
-            days = None
-            months = None
-            years = datetime.datetime.now().year-int(self.entry_year.get())
-            
-            if datetime.datetime.now().day < int(self.entry_day.get()):
-                days = monthrange(int(self.entry_year.get()), int(self.entry_month.get()))[1] - abs(datetime.datetime.now().day-int(self.entry_day.get()))
-            else:
-                days = datetime.datetime.now().day-int(self.entry_day.get())
+        user_day = int(self.entry_day.get())
+        user_month = int(self.entry_month.get())
+        user_year = int(self.entry_year.get())
+        month_days = monthrange(user_year, user_month)[1]
 
-            if datetime.datetime.now().month < int(self.entry_month.get()):
-                months = 12 - int(self.entry_month.get()) + datetime.datetime.now().month
-            else:
-                months = datetime.datetime.now().month - int(self.entry_month.get())
+        days = None
+        months = None
+        years = datetime.datetime.now().year - user_year
 
-            if datetime.datetime.now().day < int(self.entry_day.get()):
-                months-=1
-            if datetime.datetime.now().month < int(self.entry_month.get()):
-                years-=1
+        today = datetime.datetime.now().day
+        this_month = datetime.datetime.now().month
+        
+        if today < user_day:
+            days = month_days - abs(today - user_day)
+        else:
+            days = today - user_day
 
-            if years<0 or months<0 or not 0<int(self.entry_month.get())<=12 or not 0<int(self.entry_day.get())<=monthrange(int(self.entry_year.get()), int(self.entry_month.get()))[1]:
-                raise ValueError
+        if this_month < user_month:
+            months = 12 - user_month + this_month
+        else:
+            months = this_month - user_month
 
-            self.lbl_result["text"] = f"Your age is:\n{years} Years, {months} months, and {days} days."
-        except ValueError:
-            self.lbl_result["text"] = "You entered invalid data !"
+        if today < user_day:
+            months -= 1
+        if this_month < user_month:
+            years -= 1
+
+        if years < 0 or months < 0 \
+            or not 1 <= user_month <= 12 \
+            or not 1 <= user_day <= month_days:
+            self.lbl_result["text"] = "Invalid data entered!"
+            return
+
+        self.lbl_result["text"] = f"Your age is:\n{years} Years, {months} months, and {days} days."
 
     def clear(self):
         self.entry_year.delete(0, tk.END)
